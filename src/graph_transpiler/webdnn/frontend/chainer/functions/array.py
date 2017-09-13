@@ -241,8 +241,16 @@ def _convert_tile(converter: ChainerConverter, c_op: "chainer.functions.Tile"):
 # noinspection PyUnusedLocal
 @ChainerConverter.register_handler("Transpose")
 def _convert_transpose(converter: ChainerConverter, c_op: "chainer.functions.Transpose"):
-    # TODO
-    raise NotImplementedError("[ChainerConverter] Transpose is not supported")
+    x = converter.get_variable(c_op.inputs[0])
+    out_axes = c_op.axes
+    out_order = Order([x.order.axes[axis] for axis in out_axes])
+    out_shape = tuple([x.shape_dict[order] for order in out_order.axes])
+
+    x._order = out_order
+    x._shape = out_shape
+    
+    y, = Transpose(None)(x)
+    converter.set_variable(c_op.outputs[0](), y)        
 
 
 # noinspection PyUnusedLocal
